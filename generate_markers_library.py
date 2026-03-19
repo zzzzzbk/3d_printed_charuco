@@ -3,12 +3,12 @@
 CHARUCO MARKER LIBRARY GENERATOR (V37.0)
 ===============================================================================
 Purpose: 
-    Generates an OpenSCAD library file ('markers.scad') containing 113 unique 
-    ChArUco marker geometries. This is required for the main .scad script.
+    Generates an OpenSCAD library file ('markers.scad') containing DICT_4X4_250
+    marker geometries. This is required for the main .scad script.
 
 Usage:
     1. Install opencv-python:  pip install opencv-python
-    2. Run this script:        python generate_library.py
+    2. Run this script:        python generate_markers_scad_v37_0.py
     3. Output:                 Creates 'markers.scad' in the same directory.
 
 [DEBUG LOGGING]
@@ -25,8 +25,8 @@ import os
 # The Dictionary MUST match the physical layout of your board.
 # Using DICT_4X4_250 standard for ChArUco.
 DICT = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
-SCAD_LIB_FILE = "markers.scad"
-MARKER_COUNT = 113
+SCAD_LIB_FILE = "markers_lib.scad"
+MARKER_COUNT = 250
 
 # --- MAIN GENERATION LOOP ----------------------------------------------------
 print(f"[INFO] Initializing generation of {MARKER_COUNT} markers...")
@@ -44,7 +44,7 @@ try:
         # VALIDATION FLAG (Used by main script to confirm file exists)
         f.write("markers_loaded = true;\n\n")
         
-        f.write("module draw_marker(id) {\n")
+        f.write("module draw_marker_white(id) {\n")
         
         for i in range(MARKER_COUNT):
             # Generate 6x6 pixel image (4x4 marker + 1px border)
@@ -52,20 +52,60 @@ try:
             
             f.write(f"    if (id == {i}) {{\n")
             
-            # We generate geometry ONLY for WHITE pixels.
-            # In ChArUco, the marker bits are white holes inside a black square.
+            # White cells are marker holes inside a black square.
             for y in range(6):
                 for x in range(6):
-                    # Check for white pixel (value > 128)
-                    if img[y, x] > 128: 
+                    if img[y, x] > 128:
                         # OpenSCAD Y is inverted relative to Image Y (Top-Down vs Bottom-Up)
                         f.write(f"        translate([{x}, {5-y}, 0]) square([1, 1]);\n")
             
             f.write("    }\n")
             
+        f.write("}\n\n")
+
+        f.write("module draw_marker_black(id) {\n")
+
+        for i in range(MARKER_COUNT):
+            # Generate 6x6 pixel image (4x4 marker + 1px border)
+            img = aruco.generateImageMarker(DICT, i, 6)
+
+            f.write(f"    if (id == {i}) {{\n")
+
+            # Black cells represent printable marker material directly.
+            for y in range(6):
+                for x in range(6):
+                    if img[y, x] <= 128:
+                        # OpenSCAD Y is inverted relative to Image Y (Top-Down vs Bottom-Up)
+                        f.write(f"        translate([{x}, {5-y}, 0]) square([1, 1]);\n")
+
+            f.write("    }\n")
+
+        f.write("}\n\n")
+
+        # Robust 3D geometry emitter: avoids 2D corner-touching polygon issues.
+        f.write("module draw_marker_black_3d(id, cell=1, height=1) {\n")
+
+        for i in range(MARKER_COUNT):
+            # Generate 6x6 pixel image (4x4 marker + 1px border)
+            img = aruco.generateImageMarker(DICT, i, 6)
+
+            f.write(f"    if (id == {i}) {{\n")
+
+            for y in range(6):
+                for x in range(6):
+                    if img[y, x] <= 128:
+                        # OpenSCAD Y is inverted relative to Image Y (Top-Down vs Bottom-Up)
+                        f.write(f"        translate([{x}*cell, {5-y}*cell, 0]) cube([cell, cell, height]);\n")
+
+            f.write("    }\n")
+
+        f.write("}\n\n")
+
+        # Backward compatibility for older SCAD scripts.
+        f.write("module draw_marker(id) {\n")
+        f.write("    draw_marker_white(id);\n")
         f.write("}\n")
     print(f"[SUCCESS] Library generated successfully at '{SCAD_LIB_FILE}'.")
-    print("[NEXT STEP] Open the .scad file in OpenSCAD.")
 
 except Exception as e:
     print(f"[ERROR] Failed to generate library: {e}")
