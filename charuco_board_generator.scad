@@ -119,10 +119,11 @@ module render_board() {
                 }
             }
 
-            // C. Label (bottom border)
-            translate([5, -border_size / 2, effective_thickness - 0.6])
-                linear_extrude(1.0)
-                text(label_text, size = 3.5, font = "Arial:style=Bold", valign = "center");
+            // C. Label (back side / underside engraving)
+            translate([inner_w / 2, -border_size / 2, -0.01])
+                linear_extrude(0.8)
+                mirror([1, 0, 0])
+                text(label_text, size = 3.5, font = "Arial:style=Bold", halign = "center", valign = "center");
         }
     }
 

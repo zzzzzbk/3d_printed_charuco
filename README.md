@@ -1,46 +1,87 @@
-# Parametric 3D-Printable ChArUco Calibration Target
+# Parametric 3D-Printable ChArUco Calibration Board
 
-![Robot Dolphins from Outer Space Logo](docs/logo.png)
 
-**Developed by Robot Dolphins from Outer Space: Team 5199 & Gemini Pro**
+## What Changed In This Fork
 
-A robust OpenSCAD toolkit for generating large-scale ChArUco calibration boards that can be split and 3D printed on standard-sized beds. This project features precision multi-material slicing support and modular assembly options, making it easy to create professional-grade computer vision calibration targets without a large-format printer.
+This project was originally developed by **Robot Dolphins from Outer Space (Team 5199)** with **Gemini Pro**.
 
-![OpenSCAD Generator Preview](docs/open_scad.png)
-*Figure 1: The parametric model rendered in OpenSCAD, showing the modular split and alignment features.*
+This repository is a fork that adapts the workflow for a lighter, smaller-scale, whole-board generation pipeline.
+
+
+1. **Whole board generation only**
+   - Removed printer bed split logic and part-index based tiling.
+   - The model now generates one complete board.
+
+2. **Independent row/column control**
+   - Added direct control of `board_rows` and `board_cols`.
+
+
+## Quick Start
+
+### 1. Install Dependencies
+
+- [OpenSCAD](https://openscad.org/)
+- Python 3.9+ recommended
+- OpenCV with ArUco module:
+
+```bash
+pip install opencv-python
+```
+
+### 2. Open The Board Generator In OpenSCAD
+
+Open:
+
+- `charuco_board_generator.scad`
+
+### 3. Configure Geometry (Customizer)
+
+Set the main parameters:
+
+- `board_rows`
+- `board_cols`
+- `sq_size`
+- `marker_size`
+- `border_size`
+- `thickness`
+- `surface_layer`
+
+Use `F5` for fast preview while tuning.
+
+### 4. (Optional) Generate Another ArUco Library
+
+Run `generate_markers_library.py` if you want a different ArUco dictionary than the default `DICT_4X4_250`.
+
+### 5. Export STL Files
+
+1. Set `export_mode = "White Base"`
+2. Press `F6` (Render)
+3. Export STL
+4. Set `export_mode = "Black Pattern"`
+5. Press `F6` again
+6. Export STL
+
+![OpenSCAD Setup](docs/openscad.png)
+
+
+### 6. Slice As Multipart Model (Bambu studio)
+
+1. Import both STL files into your slicer at the same time.
+2. Choose "Yes" when "Load these files as a single object with multiple parts" appears.
+3. Go to "Process" -> "Object" and assign white filament to the whole part, then assign black filament to the `_black.stl` sub-part.
+4. Select the whole part and rotate it 180 degrees around the Y axis so the markers face down and the text label faces up.
+5. Go to "Process" -> "Global", choose the proper resolution, layer height, and initial layer height, then slice and print.
+
+![Color Setup](docs/color.png)
+![Slicer Setup](docs/sliced.png)
+
 
 ## Pre-Generated Files
 
-For convenience, we have provided ready-to-print files for a standard **15x15 Grid** configuration:
+For convenience, this repo includes pre-generated files under:
 
-* **STL Models (`stl/`):** Contains exported "White Base" and "Black Pattern" files pre-configured for:
-    * Prusa XL
-    * Bambu Labs X1E
-* **Slicer Projects (`slicer/`):** Contains pre-configured project files (with multi-material settings applied) for:
-    * **Prusa Slicer** (for Prusa XL)
-    * **Bambu Studio** (for Bambu Labs X1E)
+- `stl/`
+- `slicer/`
 
-## Key Features
-
-* **Auto-Splitting:** Automatically slices large targets (e.g., 15x15 grids) into printable sections compatible with standard build volumes like the Prusa XL, Bambu X1, and Prusa MK4.
-* **Modular Assembly:** Choose between two robust connection styles:
-    * **Smart Dovetails:** Precision puzzle-fit with anchored geometry for a flat, glue-assembled board.
-    * **Joiner Plates:** Reinforced screw-fastened connections using printed plates and standard M3/wood screws. **(⚠️ Note: This connection style is currently in development and untested.)**
-* **Multi-Material Ready:** Generates separate "White Base" and "Black Pattern" STL files with anchored geometry, ensuring perfect boolean unions in slicers.
-* **Robust Geometry:** Includes reinforcement bosses for screw holes and "top-open" dovetail slots to ensure easy assembly and structural integrity.
-* **Python Integration:** Includes a helper script to generate standard ArUco dictionary patterns (`markers.scad`).
-
-## Usage Summary
-
-1.  **Generate Markers:** Run the included Python script to generate the ArUco marker library:
-    ```bash
-    python generate_library.py
-    ```
-2.  **Configure:** Open the `.scad` file in OpenSCAD and select your **Printer Model** and **Connection Type** in the Customizer.
-    * *Note: Extensive usage information, advanced configuration options, and logic explanations are provided as inline comments within the SCAD source file.*
-3.  **Export:** Select the **Part Index** you wish to print, then export the `White Base` and `Black Pattern` files separately.
-4.  **Print:** Import both files into your slicer as a "Multi-Part Object" to preserve alignment and assign filament colors.
-
-![Slicer Multi-Material Setup](docs/slicer.png)
-*Figure 2: The generated parts imported into the slicer as a single multi-material object, ready for printing.*
+Use those directly if they match your printer and board requirements.
 
